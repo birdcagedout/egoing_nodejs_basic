@@ -7,6 +7,7 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 
+
 var app = http.createServer(
 	function(request,response){
     var _url = request.url;
@@ -66,33 +67,33 @@ var app = http.createServer(
 		// 	href: '/api/user?id=HTML'
 		// }
 
-
 		var pathname = url.parse(_url, true).pathname;
-		if(pathname === '/') {
-			// 홈(WEB)
-			if(queryData.id === undefined) {
-				var title = 'Welcome';
-				var intro = 'Hello, node.js';
-			}
-			// HTML
-			else if(queryData.id === 'HTML') {
-				var title = 'HTML';
-			}
-			// CSS
-			else if(queryData.id === 'CSS') {
-				var title = 'CSS';
-			}
-			// JavaScript
-			else if(queryData.id === 'JavaScript') {
-				var title = 'JavaScript';
-			}
-			// 그 외
-			else {
-				response.writeHead(404);
-				response.end('Not Found');
-			}
 
-			fs.readFile(`./data/${queryData.id}`, 'utf-8', (err, description) => {
+		// 홈(WEB)
+		if(queryData.id === undefined) {
+			fs.readdir('data', function(err, fileList) {
+				console.log(fileList);
+				var title = 'Welcome';
+				var description = 'Hello, node.js';
+
+				/*
+				<ol>
+					<li><a href="/?id=HTML">HTML</a></li>
+					<li><a href="/?id=CSS">CSS</a></li>
+					<li><a href="/?id=JavaScript">JavaScript</a></li>
+				</ol>
+				*/
+
+				var list = '<ul>';
+				
+				var i = 0;
+				while(i < fileList.length) {
+					list += `<li><a href="/id=${fileList[i]}">${fileList[i]}</a><li>`;
+					i++;
+				}
+
+				list += '</ul>';
+
 				var template = `
 				<!doctype html>
 				<html>
@@ -102,15 +103,9 @@ var app = http.createServer(
 				</head>
 				<body>
 					<h1><a href="/">WEB</a></h1>
-					<ol>
-						<li><a href="/?id=HTML">HTML</a></li>
-						<li><a href="/?id=CSS">CSS</a></li>
-						<li><a href="/?id=JavaScript">JavaScript</a></li>
-					</ol>
+					${list}
 					<h2>${title}</h2>
-					<p>
-					${intro ?? description}
-					</p>
+					<p>${description}</p>
 				</body>
 				</html>`;
 	
@@ -118,8 +113,30 @@ var app = http.createServer(
 				// console.log(__dirname + _url);													// /Users/birdcagedout/Dev/egoing_express/index.html
 				// response.end(fs.readFileSync(__dirname + _url));
 				response.end(template);
-			});	
-		} else {
+			});
+		} 
+		// 그 외(HTML, CSS ,JavaScript)
+		else {
+			fs.readFile(`data/${queryData.id}`, 'utf-8', function(err, description) {
+				var title = queryData.id;
+				
+				var template = `
+				<!doctype html>
+				<html>
+				<head>
+					<title>WEB1 - ${title}</title>
+					<meta charset="utf-8">
+				</head>
+				<body>
+					<h1><a href="/">WEB</a></h1>
+					${list}
+					<h2>${title}</h2>
+					<p>${description}</p>
+				</body>
+				</html>`;
+			});
+
+
 			response.writeHead(404);
 			response.end('Not Found');
 		}
